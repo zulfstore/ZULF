@@ -1,0 +1,6 @@
+{
+  "name": "ZULF STORE",
+  "description": "Production-minded Pakistan-first Shopify-style e-commerce store with Cash on Delivery, visual homepage builder, inventory control, and admin suite.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
