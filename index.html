@@ -5,24 +5,63 @@
     <script>
       (function() {
         try {
-          var origFetch = window.fetch ? window.fetch.bind(window) : undefined;
-          Object.defineProperty(window, 'fetch', {
-            value: origFetch,
-            writable: true,
-            configurable: true,
-            enumerable: true
-          });
-        } catch (e1) {
-          try {
-            var _f = window.fetch ? window.fetch.bind(window) : undefined;
-            Object.defineProperty(window, 'fetch', {
-              get: function() { return _f; },
-              set: function(fn) { _f = fn; },
-              configurable: true,
-              enumerable: true
-            });
-          } catch (e2) {}
-        }
+          var origFetch = window.fetch;
+          var currentFetch = typeof origFetch === 'function' ? origFetch.bind(window) : origFetch;
+
+          // 1. Explicitly patch Window.prototype which holds the native getter
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            try {
+              Object.defineProperty(Window.prototype, 'fetch', {
+                get: function() {
+                  return currentFetch;
+                },
+                set: function(val) {
+                  currentFetch = val;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            } catch (e1) {}
+          }
+
+          // 2. Walk entire prototype chain of window to ensure any level can be set
+          var p = window;
+          while (p) {
+            try {
+              Object.defineProperty(p, 'fetch', {
+                get: function() {
+                  return currentFetch;
+                },
+                set: function(val) {
+                  currentFetch = val;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            } catch (e2) {}
+            try {
+              p = Object.getPrototypeOf(p);
+            } catch (e3) {
+              break;
+            }
+          }
+
+          // 3. Patch globalThis if present
+          if (typeof globalThis !== 'undefined' && globalThis !== window) {
+            try {
+              Object.defineProperty(globalThis, 'fetch', {
+                get: function() {
+                  return currentFetch;
+                },
+                set: function(val) {
+                  currentFetch = val;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            } catch (e4) {}
+          }
+        } catch (eTop) {}
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
